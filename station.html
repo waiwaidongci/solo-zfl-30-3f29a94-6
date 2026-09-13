@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>潜次证据封存台</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, "PingFang SC", sans-serif; background: #e8f2f3; color: #183035; }
+    header { padding: 14px 20px; background: #fff; border-bottom: 1px solid #c9dadc; display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap; }
+    h1 { margin: 0; font-size: 22px; }
+    h2 { font-size: 17px; margin: 0 0 10px; }
+    h3 { font-size: 15px; margin: 14px 0 8px; }
+    button { border: 0; border-radius: 8px; padding: 10px 14px; background: #1d6c78; color: #fff; font-weight: 800; cursor: pointer; font-size: 14px; min-height: 40px; }
+    button.secondary { background: #64777b; }
+    button.ghost { background: #eef4f5; color: #1d6c78; border: 1px solid #b9cfd3; }
+    button.danger { background: #a33c3c; }
+    button:disabled { background: #b7c6c8; cursor: not-allowed; }
+    a.link { color: #1d6c78; font-weight: 700; text-decoration: none; }
+    input, select, textarea { width: 100%; border: 1px solid #c9dadc; border-radius: 6px; padding: 9px; font: inherit; background: #fff; }
+    textarea { min-height: 60px; }
+    label { display: block; margin: 9px 0 5px; color: #5c7378; font-size: 13px; }
+    .muted { color: #5c7378; font-size: 13px; }
+    .pill { display: inline-block; padding: 3px 8px; border: 1px solid #c9dadc; border-radius: 999px; font-size: 12px; background: #fff; }
+    .pill.ok { background: #e3f3e6; border-color: #9ed1a8; color: #226b32; }
+    .pill.warn { background: #fdf3d8; border-color: #e6c96a; color: #7a5c00; }
+    .pill.err { background: #fbe3e3; border-color: #e0a0a0; color: #8f2424; }
+    .pill.info { background: #e3eefb; border-color: #a8c4e6; color: #1d4e8f; }
+
+    nav.tabs { display: flex; gap: 6px; padding: 10px 16px 0; background: #fff; border-bottom: 1px solid #c9dadc; overflow-x: auto; }
+    nav.tabs button { background: none; color: #4a6065; border-radius: 8px 8px 0 0; border: 1px solid transparent; border-bottom: 0; white-space: nowrap; }
+    nav.tabs button.active { background: #e8f2f3; color: #0f4a54; border-color: #c9dadc; }
+
+    main { padding: 14px 16px 40px; }
+    section.tab { display: none; }
+    section.tab.active { display: block; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+    .grid-seal { display: grid; grid-template-columns: 340px 1fr; gap: 14px; align-items: start; }
+    .panel { background: #fff; border: 1px solid #c9dadc; border-radius: 8px; padding: 14px; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .row > * { flex: 0 0 auto; }
+    .cards { display: grid; gap: 10px; }
+    .card { border: 1px solid #d7e4e5; border-radius: 8px; padding: 12px; }
+    .card .actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+    .card .actions button { padding: 7px 11px; min-height: 34px; font-size: 13px; }
+
+    .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+    .stat { background: #fff; border: 1px solid #c9dadc; border-radius: 8px; padding: 12px; text-align: center; }
+    .stat b { display: block; font-size: 24px; color: #0f4a54; }
+
+    .map { position: relative; height: 430px; overflow: hidden; background: radial-gradient(circle at 30% 20%, #5fa8b1, #0f5262 55%, #07333f); border-radius: 8px; border: 1px solid #0c4451; cursor: crosshair; touch-action: manipulation; }
+    .wreck { position: absolute; left: 24%; top: 28%; width: 52%; height: 31%; border: 3px solid rgba(220,235,224,.55); border-radius: 48% 44% 42% 50%; transform: rotate(-9deg); pointer-events: none; }
+    .rib { position: absolute; width: 2px; height: 36%; background: rgba(220,235,224,.35); top: 27%; transform: rotate(-9deg); pointer-events: none; }
+    .marker { position: absolute; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 11px; font-weight: 800; transform: translate(-50%, -50%); border: 2px solid rgba(255,255,255,.7); box-shadow: 0 4px 12px rgba(0,0,0,.35); cursor: pointer; padding: 0; min-height: 0; }
+    .marker.selected { outline: 4px solid rgba(255,234,124,.75); }
+    .marker.pending { background: #e8b93c; animation: pulse 1s infinite alternate; }
+    @keyframes pulse { from { transform: translate(-50%,-50%) scale(1); } to { transform: translate(-50%,-50%) scale(1.25); } }
+    .ceramic { background: #b56c38; } .wood { background: #6c4b2f; } .metal { background: #6e7880; } .unknown { background: #725ca6; }
+
+    .issues { display: grid; gap: 8px; margin: 10px 0; }
+    .issue { border-radius: 8px; padding: 10px 12px; font-size: 14px; border: 1px solid; }
+    .issue.error { background: #fbe3e3; border-color: #e0a0a0; }
+    .issue.warning { background: #fdf3d8; border-color: #e6c96a; }
+    .issue .rule { font-weight: 800; margin-right: 6px; }
+    .checks { display: grid; gap: 6px; margin: 10px 0; }
+    .checkline { display: flex; gap: 8px; align-items: baseline; padding: 8px 10px; border-radius: 8px; border: 1px solid #d7e4e5; font-size: 14px; }
+    .checkline.ok { background: #e3f3e6; border-color: #9ed1a8; }
+    .checkline.bad { background: #fbe3e3; border-color: #e0a0a0; }
+    .banner { border-radius: 8px; padding: 12px; margin: 10px 0; font-weight: 700; }
+    .banner.ok { background: #e3f3e6; border: 1px solid #9ed1a8; color: #226b32; }
+    .banner.err { background: #fbe3e3; border: 1px solid #e0a0a0; color: #8f2424; }
+    .banner.info { background: #e3eefb; border: 1px solid #a8c4e6; color: #1d4e8f; }
+
+    table.data { width: 100%; border-collapse: collapse; font-size: 13px; }
+    table.data th, table.data td { border: 1px solid #d7e4e5; padding: 6px 8px; text-align: left; vertical-align: top; }
+    table.data th { background: #eef4f5; }
+    .tablewrap { overflow-x: auto; }
+
+    .diff-block { border: 1px solid #d7e4e5; border-radius: 8px; padding: 10px; margin: 8px 0; }
+    .diff-block h4 { margin: 0 0 6px; font-size: 14px; }
+    .diff-line { font-size: 13px; padding: 3px 0; }
+    .diff-line.add { color: #226b32; }
+    .diff-line.del { color: #8f2424; }
+    .diff-line.chg { color: #7a5c00; }
+
+    .modal-mask { position: fixed; inset: 0; background: rgba(10,30,35,.5); display: none; align-items: flex-start; justify-content: center; padding: 20px; z-index: 50; overflow: auto; }
+    .modal-mask.open { display: flex; }
+    .modal { background: #fff; border-radius: 10px; max-width: 860px; width: 100%; padding: 16px; }
+    .modal .close { float: right; }
+
+    #toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%); background: #0f4a54; color: #fff; padding: 10px 18px; border-radius: 999px; font-weight: 700; display: none; z-index: 99; max-width: 90vw; }
+
+    @media (max-width: 900px) {
+      header { padding: 12px 14px; }
+      h1 { font-size: 19px; }
+      .grid2, .grid-seal { grid-template-columns: 1fr; }
+      .map { height: 300px; }
+      .stat-row { grid-template-columns: repeat(3, 1fr); }
+      main { padding: 12px 10px 60px; }
+      button { min-height: 44px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>潜次证据封存台</h1>
+      <div class="muted">建批 → 补录 → 检查封存 → 审阅 / 导出。离线运行，数据保存在本机。</div>
+    </div>
+    <div class="row">
+      <a class="link" href="index.html">← 旧版标记入口</a>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="batches" class="active">批次</button>
+    <button data-tab="markers">补录</button>
+    <button data-tab="seal">封存</button>
+    <button data-tab="versions">版本</button>
+    <button data-tab="import">导入</button>
+  </nav>
+
+  <main>
+    <!-- 批次 -->
+    <section class="tab active" id="tab-batches">
+      <div class="grid2">
+        <div class="panel">
+          <h2 id="batchFormTitle">新建调查批次</h2>
+          <form id="batchForm">
+            <input type="hidden" name="id">
+            <label>批次名称 *</label><input name="name" placeholder="例如 2026-09 第一潜次调查">
+            <label>负责人 *</label><input name="leader" placeholder="例如 张海">
+            <label>设备校准号 *</label><input name="calibrationNo" placeholder="例如 CAL-2026-0913">
+            <label>开始时间 *</label><input name="startTime" type="datetime-local">
+            <label>结束时间 *</label><input name="endTime" type="datetime-local">
+            <label>影像摘要 *</label><textarea name="imagerySummary" placeholder="例如 ROV-03 全程录像 4 段，照片 212 张"></textarea>
+            <label>备注</label><input name="note" placeholder="选填">
+            <div class="issues" id="batchErrors"></div>
+            <div class="row" style="margin-top:10px">
+              <button type="submit">保存批次</button>
+              <button type="button" class="ghost" id="batchCancel">取消编辑</button>
+            </div>
+          </form>
+        </div>
+        <div class="panel">
+          <h2>已建批次（<span id="batchCount">0</span>）</h2>
+          <div class="muted" style="margin-bottom:8px">标记只能进入已建批次；批次删除前须清空其中标记。</div>
+          <div class="cards" id="batchList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 补录 -->
+    <section class="tab" id="tab-markers">
+      <div class="grid2">
+        <div class="panel">
+          <h2>沉船平面图</h2>
+          <div class="map" id="map"><div class="wreck"></div></div>
+          <div class="muted" style="margin-top:6px">点击平面图放置标记位置（坐标 0–100）。当前：<b id="pendingCoord">未选点</b></div>
+        </div>
+        <div class="panel">
+          <h2 id="markerFormTitle">补录标记</h2>
+          <div id="noBatchHint" class="banner info" style="display:none">还没有批次，请先到「批次」页建批，标记只能进入已建批次。</div>
+          <form id="markerForm">
+            <input type="hidden" name="id">
+            <label>所属批次 *</label><select name="batchId"></select>
+            <label>编号 *</label><input name="code" placeholder="例如 A-017">
+            <label>类型 *</label>
+            <select name="type">
+              <option value="ceramic">陶片</option><option value="wood">木构件</option>
+              <option value="metal">金属件</option><option value="unknown">未知物</option>
+            </select>
+            <label>潜次 *</label><input name="dive" placeholder="例如 DIVE-04">
+            <label>记录时间 *</label><input name="recordedAt" type="datetime-local">
+            <label>深度 *</label><input name="depth" placeholder="例如 18.4m">
+            <label>朝向</label><input name="orientation" placeholder="例如东北偏北">
+            <label>保存状态</label><input name="condition" placeholder="例如表面附着贝类">
+            <label>备注</label><textarea name="note"></textarea>
+            <div class="issues" id="markerErrors"></div>
+            <div class="row" style="margin-top:10px">
+              <button type="submit">保存标记</button>
+              <button type="button" class="secondary" id="markerDelete">删除</button>
+              <button type="button" class="ghost" id="markerCancel">取消编辑</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:14px">
+        <div class="row" style="margin-bottom:8px">
+          <h2 style="margin:0">待续录标记（<span id="markerCount">0</span>）</h2>
+          <select id="markerFilterBatch" style="max-width:220px"><option value="">全部批次</option></select>
+          <select id="markerFilterType" style="max-width:160px">
+            <option value="">全部类型</option>
+            <option value="ceramic">陶片</option><option value="wood">木构件</option>
+            <option value="metal">金属件</option><option value="unknown">未知物</option>
+          </select>
+        </div>
+        <div class="cards" id="markerList"></div>
+      </div>
+    </section>
+
+    <!-- 封存 -->
+    <section class="tab" id="tab-seal">
+      <div class="stat-row">
+        <div class="stat"><b id="statBatches">0</b>待续录批次</div>
+        <div class="stat"><b id="statMarkers">0</b>待续录标记</div>
+        <div class="stat"><b id="statVersions">0</b>已封存版本</div>
+      </div>
+      <div class="grid-seal">
+        <div class="panel">
+          <h2>封存当前工作区</h2>
+          <div class="muted">封存后生成只读版本与上版差异；工作区继续作为待续录版本。</div>
+          <label>封存人 *</label><input id="sealedBy" placeholder="例如 张海">
+          <label>封存备注</label><input id="sealNote" placeholder="选填">
+          <div class="row" style="margin-top:10px">
+            <button id="checkBtn" class="ghost">检查问题</button>
+            <button id="sealBtn" disabled>确认封存</button>
+          </div>
+          <div id="sealConfirmWrap" style="display:none;margin-top:10px">
+            <label style="display:flex;gap:8px;align-items:center;color:#7a5c00">
+              <input type="checkbox" id="sealConfirm" style="width:auto"> 已逐条核对上述提醒，确认封存
+            </label>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>检查结果</h2>
+          <div id="sealResult"><div class="muted">点击「检查问题」逐项核对：时间重叠、坐标范围、编号重复、必填内容。</div></div>
+          <div id="sealedVersion"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 版本 -->
+    <section class="tab" id="tab-versions">
+      <div class="panel">
+        <h2>历史版本（只读）</h2>
+        <div class="muted" style="margin-bottom:8px">每个版本为封存时刻的完整快照，可审阅、复制续录、导出为版本包。</div>
+        <div class="cards" id="versionList"></div>
+      </div>
+    </section>
+
+    <!-- 导入 -->
+    <section class="tab" id="tab-import">
+      <div class="grid2">
+        <div class="panel">
+          <h2>导入他人版本包</h2>
+          <div class="muted">导入前逐项核对：兼容性、归属、摘要、结构与重复。损坏或重复的包不会覆盖现有数据。</div>
+          <label>选择版本包文件（.json）</label>
+          <input type="file" id="importFile" accept=".json,application/json">
+          <label>或粘贴版本包内容</label>
+          <textarea id="importText" placeholder='{"format":"dive-evidence-pack", ...}' style="min-height:120px"></textarea>
+          <div class="row" style="margin-top:10px">
+            <button id="importBtn">校验并导入</button>
+          </div>
+          <div id="importResult"></div>
+        </div>
+        <div class="panel">
+          <h2>导入记录</h2>
+          <div class="cards" id="importLog"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 审阅弹窗 -->
+  <div class="modal-mask" id="reviewMask">
+    <div class="modal">
+      <button class="close ghost" id="reviewClose">关闭</button>
+      <div id="reviewBody"></div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script src="src/core/digest.js"></script>
+  <script src="src/core/model.js"></script>
+  <script src="src/core/validate.js"></script>
+  <script src="src/core/seal.js"></script>
+  <script src="src/core/transfer.js"></script>
+  <script src="src/core/storage.js"></script>
+  <script src="src/core/store.js"></script>
+  <script src="src/ui/station.js"></script>
+</body>
+</html>

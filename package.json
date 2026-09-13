@@ -1,0 +1,14 @@
+{
+  "name": "dive-evidence-station",
+  "version": "1.0.0",
+  "private": true,
+  "description": "离线潜次证据封存台：批次登记、标记补录、校验封存、版本审阅与导入导出",
+  "scripts": {
+    "test": "node --test tests/",
+    "check:browser": "node scripts/browser-check.mjs",
+    "serve": "python3 -m http.server 8080"
+  },
+  "devDependencies": {
+    "playwright": "^1.49.0"
+  }
+}
